@@ -1,9 +1,9 @@
 const messages = require('../proto/chatbothub/chatbothub_pb')
 const services = require('../proto/chatbothub/chatbothub_grpc_pb')
 const grpc = require('grpc')
-const config = require('./../conf')
+const config = require('../conf')
 const _ = require('lodash')
-const BotAdapter = require('./BotAdapter')
+const BotAdapter = require('./ClientAdapter')
 const EventEmitter = require('events')
 const log = console
 const mutePingPongLog = true
@@ -14,7 +14,7 @@ const mutePingPongLog = true
  * - communicate with client with client's sdk
  * @type {module.BotClient}
  */
-class BotClient extends EventEmitter {
+class GRPCClient extends EventEmitter {
   constructor (botAdapter) {
     super()
 
@@ -112,12 +112,12 @@ class BotClient extends EventEmitter {
     }
 
     if (this.pingTimes % 20 === 1) {
-      console.log('FROM CHATHUB:', {
-        eventType,
-        body,
-        clientId,
-        clientType
-      })
+      // console.log('FROM CHATHUB:', {
+      //   eventType,
+      //   body,
+      //   clientId,
+      //   clientType
+      // })
     }
 
 
@@ -148,8 +148,9 @@ class BotClient extends EventEmitter {
       if (eventType === 'BOTACTION' && actionType === 'SnsTimeline') {
         return
       }
-
-      log.info(`received tunnel event: ${eventType} ${body}`)
+      log.info(`\n----------From Chathub: ${eventType} ${actionType} ${clientId} ${clientType}------------`)
+      log.info(`${body}`)
+      log.info(`----------From Chathub: ${eventType}------------\n`)
     }
 
     if (eventType === 'LOGIN') {
@@ -196,7 +197,10 @@ class BotClient extends EventEmitter {
         const cost = (new Date()) - startTime
 
         if (handled) {
-          log.debug(`> handel event from hub: ${actionType} ${body} [${cost}ms], success: ${JSON.stringify(response)}`)
+          log.debug(`\n---------------To Chathub: ${actionType}----------------`)
+          log.debug(`${body}`)
+          log.debug(`${JSON.stringify(response)}`)
+          log.debug(`---------------To Chathub: ${actionType}----------------\n`)
           if (actionType === 'GetContact') {
             // 我不确定这里chathub要不要GetContact指令，先加着
             await this._replyActionToHub(actionType, parsedBody, response)
@@ -205,13 +209,13 @@ class BotClient extends EventEmitter {
             await this._replyActionToHub(actionType, parsedBody, response)
           }
         } else {
-          log.error(`> handel event from hub: ${actionType} ${body} [${cost}ms], fail: unhandled message`)
+          log.error(`From Chathub:: ${actionType} ${body} [${cost}ms], fail: unhandled message`)
 
           await this._replyActionToHub(actionType, parsedBody, 'unhandled message')
         }
       } catch (e) {
         const cost = (new Date()) - startTime
-        log.error(`> handel event from hub: ${actionType} ${body} [${cost}ms], fail: ${e.toString()}`)
+        log.error(`From Chathub: ${actionType} ${body} [${cost}ms], fail: ${e.toString()}`)
         console.log(e)
         await this._replyActionToHub(actionType, parsedBody, null, e.toString())
       }
@@ -242,9 +246,10 @@ class BotClient extends EventEmitter {
     }
 
     if (eventType === 'PING') {
+      // 这里是屏蔽了发送给ChatHub的ping日志
       !mutePingPongLog && log.trace(`tunnel send: [${eventType}] ${bodyStr}`)
     } else {
-      log.debug(`tunnel send: [${eventType}] ${bodyStr}`)
+      // log.debug(`tunnel send: [${eventType}] ${bodyStr}`)
     }
 
     const newEventRequest = (eventType, body) => {
@@ -322,7 +327,7 @@ class BotClient extends EventEmitter {
     })
 
     this.tunnel.on('error', async (e) => {
-      log.error('grpc connection error', 'code', e.code, e.details)
+      log.error('grpc connection error', e)
       await this._stop(true)
     })
 
@@ -344,4 +349,4 @@ class BotClient extends EventEmitter {
   }
 }
 
-module.exports = BotClient
+module.exports = GRPCClient

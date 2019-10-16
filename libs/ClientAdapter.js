@@ -1,5 +1,8 @@
 
-class BotAdapter {
+/**
+ * 其他客户端的基础类，一个客户端需要实现登入登出以及实施chathub各种指令的操作
+ */
+class ClientAdapter {
   constructor (clientId, clientType) {
     this.clientId = clientId
     this.clientType = clientType
@@ -11,10 +14,12 @@ class BotAdapter {
     this.objectDecoders = {}
   }
 
+  //  把处理chathub指令的方法推到 this.hubActionHandler 中
   registerHubAction (actionType, handler) {
     this.hubActionHandler[actionType] = handler
   }
 
+  // 
   async handleHubAction (actionType, actionBody) {
     const actionHandler = this.hubActionHandler[actionType]
     if (!actionHandler) {
@@ -36,7 +41,7 @@ class BotAdapter {
   }
 
   sendHubEvent (eventType, eventBody = {}) {
-    return this.invokeBotCallback(BotAdapter.Callback.SEND_HUB_EVENT, {
+    return this.invokeBotCallback(ClientAdapter.Callback.SEND_HUB_EVENT, {
       eventType,
       eventBody
     })
@@ -80,11 +85,11 @@ class BotAdapter {
   }
 }
 
-BotAdapter.Callback = {
+ClientAdapter.Callback = {
   SEND_HUB_EVENT: 'sendHubEvent'
 }
 
-BotAdapter.HubEvent = {
+ClientAdapter.HubEvent = {
   LOGIN_DONE: 'LOGINDONE',
   LOGOUT_DONE: 'LOGOUTDONE',
   LOGIN_SCAN: 'LOGINSCAN',
@@ -96,7 +101,7 @@ BotAdapter.HubEvent = {
   GROUPINFO: 'GROUPINFO'
 }
 
-BotAdapter.ObjectType = {
+ClientAdapter.ObjectType = {
   Room: 'Room',
   Contact: 'Contact',
   Friendship: 'Friendship',
@@ -104,4 +109,4 @@ BotAdapter.ObjectType = {
   RoomInvitation: 'RoomInvitation'
 }
 
-module.exports = BotAdapter
+module.exports = ClientAdapter
