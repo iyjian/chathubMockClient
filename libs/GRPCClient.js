@@ -5,7 +5,7 @@ const config = require('../conf')
 const _ = require('lodash')
 const BotAdapter = require('./ClientAdapter')
 const EventEmitter = require('events')
-const log = console
+const log = require('./log')
 const mutePingPongLog = true
 
 /**
@@ -100,6 +100,7 @@ class GRPCClient extends EventEmitter {
     await this.botAdapter.login(this.loginInfo)
   }
 
+  // 处理chathub的指令，处理完毕后调用 --> _replyActionToHub --> _sendEventToHub
   async _handleEventFromHub (event) {
     const eventType = event.getEventtype()
     const body = event.getBody()
@@ -143,9 +144,11 @@ class GRPCClient extends EventEmitter {
       // log.trace(`received tunnel event: ${eventType}`)
       return
     } else {
-      log.info(`\n----------From Chathub: ${eventType} ${actionType} ${clientId} ${clientType}------------`)
+      log.info(`\n`)
+      log.info(`----------From Chathub: ${eventType} ${actionType} ${clientId} ${clientType}------------`)
       log.info(`${body}`)
-      log.info(`----------From Chathub: ${eventType}------------\n`)
+      log.info(`----------From Chathub: ${eventType}------------`)
+      log.info(`\n`)
     }
 
     if (eventType === 'LOGIN') {
@@ -156,7 +159,6 @@ class GRPCClient extends EventEmitter {
         log.error('Can not logout, because the bot is not signed on')
         return
       }
-
       await this.botAdapter.logout()
     } else if (eventType === 'SHUTDOWN') {
       process.exit(0)
@@ -192,12 +194,14 @@ class GRPCClient extends EventEmitter {
         const cost = (new Date()) - startTime
 
         if (handled) {
-          log.debug(`\n-------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------`)
-          log.debug('event body:')
+          log.info(`\n`)
+          log.debug(`-------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------`)
+          log.debug('event request body:')
           log.debug(`${body}`)
-          log.debug('event response:')
+          log.debug('event response(you should return this in actions/*):')
           log.debug(`${JSON.stringify(response)}`)
-          log.debug(`---------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------\n`)
+          log.debug(`---------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------`)
+          log.info(`\n`)
 
           if (actionType === 'GetContact') {
             // 我不确定这里chathub要不要GetContact指令，先加着
@@ -238,7 +242,8 @@ class GRPCClient extends EventEmitter {
         bodyStr = JSON.stringify(eventBody)
       }
 
-      if (bodyStr.length > 1200) {
+      if (bodyStr.length > 1200 && process.env.NODE_ENV === 'production') {
+        // 生产环境上做截断
         bodyStr = bodyStr.substr(0, 1200)
       }
     }
@@ -247,9 +252,12 @@ class GRPCClient extends EventEmitter {
       // 这里是屏蔽了发送给ChatHub的ping日志
       !mutePingPongLog && log.trace(`tunnel send: [${eventType}] ${bodyStr}`)
     } else {
-      log.debug(`\n-------------To Chathub EVENT: ${eventType}----------------`)
+      // 可能是单向的给chathub发消息
+      log.debug(`\n`)
+      log.debug(`-------------To Chathub EVENT: ${eventType}----------------`)
       log.debug(`${bodyStr}`)
-      log.debug(`---------------To Chathub EVENT: ${eventType}----------------\n`)
+      log.debug(`-------------To Chathub EVENT: ${eventType}----------------`)
+      log.debug(`\n`)
     }
 
     const newEventRequest = (eventType, body) => {

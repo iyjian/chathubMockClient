@@ -44,6 +44,10 @@ class mockBot extends EventEmitter {
   logonoff () {
     return this.isLoggedIn
   }
+
+  logout () {
+    this.isLoggedIn = false
+  }
 }
 
 module.exports = mockBot
