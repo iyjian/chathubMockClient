@@ -143,10 +143,6 @@ class GRPCClient extends EventEmitter {
       // log.trace(`received tunnel event: ${eventType}`)
       return
     } else {
-      // TODO: 现在不支持 Snstimeline 指令，暂不处理
-      if (eventType === 'BOTACTION' && actionType === 'SnsTimeline') {
-        return
-      }
       log.info(`\n----------From Chathub: ${eventType} ${actionType} ${clientId} ${clientType}------------`)
       log.info(`${body}`)
       log.info(`----------From Chathub: ${eventType}------------\n`)
@@ -196,10 +192,13 @@ class GRPCClient extends EventEmitter {
         const cost = (new Date()) - startTime
 
         if (handled) {
-          log.debug(`\n---------------To Chathub: ${actionType}----------------`)
+          log.debug(`\n-------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------`)
+          log.debug('event body:')
           log.debug(`${body}`)
+          log.debug('event response:')
           log.debug(`${JSON.stringify(response)}`)
-          log.debug(`---------------To Chathub: ${actionType}----------------\n`)
+          log.debug(`---------------To Chathub ActionReply: ${actionType} cost [${cost}ms]--------\n`)
+
           if (actionType === 'GetContact') {
             // 我不确定这里chathub要不要GetContact指令，先加着
             await this._replyActionToHub(actionType, parsedBody, response)
@@ -248,7 +247,9 @@ class GRPCClient extends EventEmitter {
       // 这里是屏蔽了发送给ChatHub的ping日志
       !mutePingPongLog && log.trace(`tunnel send: [${eventType}] ${bodyStr}`)
     } else {
-      // log.debug(`tunnel send: [${eventType}] ${bodyStr}`)
+      log.debug(`\n-------------To Chathub EVENT: ${eventType}----------------`)
+      log.debug(`${bodyStr}`)
+      log.debug(`---------------To Chathub EVENT: ${eventType}----------------\n`)
     }
 
     const newEventRequest = (eventType, body) => {
