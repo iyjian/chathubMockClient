@@ -77,7 +77,6 @@ class GRPCClient extends EventEmitter {
    * {"botId":"3599f45e-8907-4543-ace7-6028e94a5173","login":"placeHolder","password":"","loginInfo":""}
    */
   async _handleLoginRequest (body) {
-    log.info('begin login')
 
     const loginBody = JSON.parse(body)
 

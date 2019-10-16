@@ -22,7 +22,6 @@ class MockClientAdapter extends ClientAdapter {
   }
 
   async _newmockBot (loginInfo) {
-    console.log('_newmockBot')
     const wxClient = new WxClient()
     return wxClient
   }
@@ -271,7 +270,7 @@ class MockClientAdapter extends ClientAdapter {
         }
       })
       .on('login', async (userSelf) => {
-        log.debug(`on login: ${userSelf}`, userSelf.id)
+        log.debug(`on login: ${JSON.stringify(userSelf)}`, userSelf.id)
         this.contactSelf = userSelf
         await this._responseLoginDone()
       })

@@ -1,0 +1,6 @@
+version: "3.5"
+
+services:
+  chathub_mock_client:
+    build: .
+    network_mode: "host"
