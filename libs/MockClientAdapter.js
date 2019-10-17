@@ -13,9 +13,7 @@ class MockClientAdapter extends ClientAdapter {
 
     this.mockBot = null
 
-    this.contactSelf = {
-      id: 'mockingUser'
-    }
+    this.contactSelf = {}
 
     this._registerHubActions()
   }

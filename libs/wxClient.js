@@ -32,12 +32,22 @@ class mockBot extends EventEmitter {
   async start () {
     await this.sleep(2)
     const qrcode = await f.toDataURL()
+    // scan event
     this.emit('scan', qrcode, 0)
+    this.isLoggedIn = true
+    // start mock event emmiter
+    this.mockEventEmmiter()
+  }
+
+  // 
+  async mockEventEmmiter () {
+
+    // login event
     await this.sleep(10)
     this.emit('login', {
       id: 'mockWechatAccount'
     })
-    this.isLoggedIn = true
+
   }
 
   // 是否登陆
