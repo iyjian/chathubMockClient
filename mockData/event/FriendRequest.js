@@ -1,3 +1,7 @@
+/*
+WECHATMACPRO friendrequest event is a json object
+WECHAT friendrequest event is a xml
+*/
 module.exports = {
   "content": {
     "contactId": "wxid_5753727547512",
