@@ -27,7 +27,52 @@ service ChatBotHub {
   // below are for internal web api
   rpc GetBots (BotsRequest) returns (BotsReply) {}
   rpc BotLogin (BotLoginRequest) returns (BotLoginReply) {}
+  rpc BotLogout (BotLogoutRequest) returns (OperationReply) {}
+  rpc BotShutdown (BotLogoutRequest) returns (OperationReply) {}
   rpc BotAction (BotActionRequest) returns (BotActionReply) {}
+  rpc BotFilter (BotFilterRequest) returns (OperationReply) {}
+  rpc BotMomentFilter (BotFilterRequest) returns (OperationReply) {}
+
+  rpc FilterCreate (FilterCreateRequest) returns (OperationReply) {}
+  rpc FilterNext (FilterNextRequest) returns (OperationReply) {}
+  rpc RouterBranch (RouterBranchRequest) returns (OperationReply) {}
+  rpc FilterFill (FilterFillRequest) returns (FilterFillReply) {}
+
+  rpc WebShortCallResponse (EventReply) returns (OperationReply) {}
+
+  // tunnel that connect streaming server and chathub server
+  rpc StreamingTunnel (stream EventRequest) returns (stream EventReply) {}
+
+  // streaming rpc
+  rpc StreamingCtrl (StreamingCtrlRequest) returns (OperationReply) {}
+}
+
+message BotFilterRequest {
+  string botId = 1;
+  string filterId = 2;
+}
+
+message FilterCreateRequest {
+  string filterId = 1;
+  string filterType = 2;
+  string filterName = 3;
+  string body = 4;
+}
+
+message FilterNextRequest {
+  string filterId = 1;
+  string nextFilterId = 2;
+}
+
+message BranchTag {
+  string Key = 1;
+  string Value = 2;
+}
+
+message RouterBranchRequest {
+  BranchTag tag = 1;
+  string routerId = 2;
+  string filterId = 3;
 }
 
 message EventRequest {
@@ -40,8 +85,11 @@ message EventRequest {
 message EventReply {
   string eventType = 1;
   string body = 2;
-  string clientId = 3;
-  string clientType = 4;
+  string botClientId = 3;
+  string botClientType = 4;
+  string botId = 5;
+  string clientId = 6;
+  string clientType = 7;
 }
 
 message BotsRequest {
@@ -63,7 +111,9 @@ message BotsInfo {
   string loginInfo = 7;
   int32 status = 8;
   string filterInfo = 9;
-  string botId = 10;
+  string momentFilterInfo = 10;
+  string botId = 11;
+  string scanUrl = 12;
 }
 
 message BotLoginRequest {
@@ -76,13 +126,23 @@ message BotLoginRequest {
   string botId = 7;
 }
 
+message BotLogoutRequest {
+  string botId = 1;
+}
+
+message OperationReply {
+  int32  code = 1;
+  string message  = 2;
+}
+
 message BotLoginReply {
   string msg = 1;
+  OperationReply clientError = 2;
 }
 
 message BotActionRequest {
   string actionRequestId = 1;
-  string login = 2;  
+  string login = 2;
   string actionType = 3;
   string actionBody = 4;
 }
@@ -92,4 +152,29 @@ message BotActionReply {
   bool   success = 2;
   string msg = 3;
   string body = 4;
+  OperationReply clientError = 5;
+}
+
+message FilterFillRequest {
+  string botId  = 1;
+  string source = 2;
+  string body   = 3;
+}
+
+message FilterFillReply {
+  bool   success = 1;
+}
+
+message StreamingCtrlRequest {
+  string clientId = 1;
+  string clientType = 2;
+  repeated StreamingResource resources = 3;
+}
+
+message StreamingResource {
+  string botId = 1;
+  int32 resourceType = 2;
+  int32 actionType = 3;
+  repeated string chatusers = 4;
+  repeated string chatgroups = 5;
 }

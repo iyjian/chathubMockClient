@@ -109,6 +109,7 @@ class GRPCClient extends EventEmitter {
 
     if (eventType === 'PING') {
       this.pingTimes++
+      console.log(eventType, clientId, clientType, body)
     }
 
     if (this.pingTimes % 20 === 1) {

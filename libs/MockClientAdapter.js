@@ -55,6 +55,9 @@ class MockClientAdapter extends ClientAdapter {
         log.debug(`on login: ${JSON.stringify(userSelf)}`, userSelf.id)
         this.contactSelf = userSelf
         this._responseLoginDone()
+        // this.sendHubEvent(ClientAdapter.HubEvent.LOGIN_DONE, {
+        //   userName: userId
+        // })
       })
       // emit when all data has load completed, in wechaty-puppet-padchat, it means it has sync Contact and Room completed
       .on('ready', async () => {
@@ -62,43 +65,74 @@ class MockClientAdapter extends ClientAdapter {
         await this._syncContact()
       })
       // emit after the bot log out
-      .on('logout', async (userSelf) => {
+      .on('logout', async userSelf => {
         log.debug(`on logout: ${userSelf}`)
         this.sendHubEvent(ClientAdapter.HubEvent.LOGOUT_DONE, '用户已主动登出')
         // 退出登陆以后立即自杀
         process.exit(0)
       })
-      // When the bot get error, there will be a Wechaty error event fired.
-      .on('error', async (error) => {
-        // 
-      })
-      // Get bot’s heartbeat.
-      .on('heartbeat', (data) => {
-        // 
-      })
       // emit when someone sends bot a friend request
-      .on('friendship', async (friendship) => {
-        // 
+      .on('friendship', async friendship => {
+        this.sendHubEvent(ClientAdapter.HubEvent.FRIEND_REQUEST, friendship)
       })
       // emit when there's a new message
-      .on('message', async (message) => {
-        // process bot message
+      .on('message', async message => {
+        this.sendHubEvent(ClientAdapter.HubEvent.MESSAGE, message)
       })
       // emit when anyone join any room
-      .on('room-join', (room, inviteeList) => {
-        log.debug(`on room-join: ${room} ${inviteeList}`)
+      .on('room-join', message => {
+        // TODO
+        this.sendHubEvent(ClientAdapter.HubEvent.GROUPINFO, message)
       })
-      // emit when someone change room topic
-      .on('room-topic', (room, newTopic, oldTopic, changer) => {
-        log.debug(`on room-topic: ${room} ${newTopic} ${oldTopic} ${changer}`)
+      // // emit when someone change room topic
+      // .on('room-topic', (room, newTopic, oldTopic, changer) => {
+      //   log.debug(`on room-topic: ${room} ${newTopic} ${oldTopic} ${changer}`)
+      // })
+      // // emit when anyone leave the room
+      // .on('room-leave', (room, leaverList) => {
+      //   log.debug(`on room-leave: ${room} ${leaverList}`)
+      // })
+      // // emit when there is a room invitation
+      // .on('room-invite', (room, inviterList) => {
+      //   log.debug(`on room-invite: ${room} ${inviterList}`)
+      // })
+      // // When the bot get error, there will be a Wechaty error event fired.
+      // .on('error', async (error) => {
+      //   // 
+      // })
+      // // Get bot’s heartbeat.
+      // .on('heartbeat', (data) => {
+      //   // 
+      // })      
+      .on('contactInfo', contactInfo => {
+        this.sendHubEvent(ClientAdapter.HubEvent.CONTACTINFO, contactInfo)
       })
-      // emit when anyone leave the room
-      .on('room-leave', (room, leaverList) => {
-        log.debug(`on room-leave: ${room} ${leaverList}`)
-      })
-      // emit when there is a room invitation
-      .on('room-invite', (room, inviterList) => {
-        log.debug(`on room-invite: ${room} ${inviterList}`)
+      .on('status-message', () => {
+            /**
+             * 消息类型
+             *  1  文字消息
+             *  2  好友信息推送，包含好友，群，公众号信息
+             *  3  收到图片消息
+             *  34 语音消息
+             *  35 用户头像buf
+             *  37 收到好友请求消息
+             *  42 名片消息
+             *  43 视频消息
+             *  47 表情消息
+             *  48 定位消息
+             *  49 APP消息(文件 或者 链接 H5)
+             *  50 语音通话
+             *  51 状态通知（如打开与好友/群的聊天界面）
+             *  52 语音通话通知
+             *  53 语音通话邀请
+             *  62 小视频
+             *  2000   转账消息
+             *  2001   收到红包消息
+             *  3000   群邀请
+             *  9999   系统通知
+             *  10000  微信通知信息. 微信群信息变更通知，多为群名修改，进群，离群信息，不包含群内聊天信息
+             *  10002  撤回消息
+             */
       })
   }
 

@@ -7,6 +7,7 @@
  */
 const EventEmitter = require('events')
 const {FileBox} = require('file-box')
+const event = require('./../mockData/event')
 
 // 给chathub一个二维码
 const f = FileBox.fromUrl(
@@ -41,13 +42,21 @@ class mockBot extends EventEmitter {
 
   // 
   async mockEventEmmiter () {
-
     // login event
-    await this.sleep(10)
-    this.emit('login', {
-      id: 'mockWechatAccount'
-    })
-
+    await this.sleep(5)
+    this.emit('login', event.Login)
+    await this.sleep(5)
+    this.emit('roomJoin', event.RoomJoin)
+    await this.sleep(5)
+    this.emit('message', event.TextMessage)
+    await this.sleep(5)
+    this.emit('message', event.UrlMessage)
+    await this.sleep(5)
+    this.emit('message', event.MiniProgramMessage)
+    await this.sleep(5)
+    this.emit('message', event.ImageMessage)
+    await this.sleep(5)
+    this.emit('friendship', event.FriendRequest)
   }
 
   // 是否登陆

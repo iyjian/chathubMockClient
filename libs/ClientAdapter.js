@@ -98,7 +98,11 @@ ClientAdapter.HubEvent = {
   IMAGEMESSAGE: 'IMAGEMESSAGE',
   EMOJIMESSAGE: 'EMOJIMESSAGE',
   CONTACTINFO: 'CONTACTINFO',
-  GROUPINFO: 'GROUPINFO'
+  GROUPINFO: 'GROUPINFO',
+  CONTACTSYNCDONE: 'CONTACTSYNCDONE', // not implemented
+  UPDATETOKEN: 'UPDATETOKEN', // not implemented
+  BOTMIGRATE: 'BOTMIGRATE', // not implemented
+  STATUSMESSAGE: 'STATUSMESSAGE' // not implemented
 }
 
 ClientAdapter.ObjectType = {
