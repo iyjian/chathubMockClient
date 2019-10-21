@@ -1,5 +1,5 @@
 const ClientAdapter = require('./ClientAdapter')
-const config = require('../conf')
+// const config = require('../conf')
 const uuidv4 = require('uuid/v4')
 const fs = require('fs')
 const path = require('path')
@@ -7,8 +7,8 @@ const WxClient = require('./wxClient')
 const log = console
 
 class MockClientAdapter extends ClientAdapter {
-  constructor () {
-    const {clientId, clientType} = config
+  constructor (clientId, clientType) {
+    console.log(clientId, clientType)
     super(clientId, clientType)
 
     this.mockBot = null

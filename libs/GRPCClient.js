@@ -1,3 +1,10 @@
+/**
+ * 
+ * !!!!!!! NEVER MODIFY THIS FILE IN THIS PROJECT !!!!!!!!!!!
+ * !!!!!!! ANY BUG OR MODIFICATION PLEASE SUBMIT PULL REQUEST TO 
+ * !!!!!!! https://github.com/iyjian/chathubmockserver
+ * 
+ */
 const messages = require('../proto/chatbothub/chatbothub_pb')
 const services = require('../proto/chatbothub/chatbothub_grpc_pb')
 const grpc = require('grpc')
@@ -15,10 +22,11 @@ const mutePingPongLog = true
  * @type {module.BotClient}
  */
 class GRPCClient extends EventEmitter {
-  constructor (botAdapter) {
+  constructor (botAdapters) {
     super()
 
-    this.botAdapter = botAdapter
+    this.botAdapters = botAdapters
+    
     this._setupBotAdapter()
 
     this.running = false
@@ -42,15 +50,17 @@ class GRPCClient extends EventEmitter {
   }
 
   _setupBotAdapter () {
-    const adapter = this.botAdapter
 
-    adapter.registerBotCallback(BotAdapter.Callback.SEND_HUB_EVENT, async ({ eventType, eventBody }) => {
-      if (eventType === 'LOGINDONE') {
-        eventBody.botId = this.botId
-      }
+    for (const botAdapter of Object.values(this.botAdapters)) {
+      botAdapter['adapter'].registerBotCallback(BotAdapter.Callback.SEND_HUB_EVENT, async ({ eventType, eventBody }) => {
+        if (eventType === 'LOGINDONE') {
+          eventBody.botId = this.botId
+        }
+  
+        return this._sendEventToHub(botAdapter['clientId'], botAdapter['clientType'], eventType, eventBody)
+      })
+    }
 
-      return this._sendEventToHub(eventType, eventBody)
-    })
   }
 
   _stop (notify = false) {
@@ -76,7 +86,7 @@ class GRPCClient extends EventEmitter {
    * @param {*} body chathub的指令内容，例如：
    * {"botId":"3599f45e-8907-4543-ace7-6028e94a5173","login":"placeHolder","password":"","loginInfo":""}
    */
-  async _handleLoginRequest (body) {
+  async _handleLoginRequest (clientId, body) {
 
     const loginBody = JSON.parse(body)
 
@@ -97,7 +107,7 @@ class GRPCClient extends EventEmitter {
       }
     }
 
-    await this.botAdapter.login(this.loginInfo)
+    await this.botAdapters[clientId]['adapter'].login(this.loginInfo)
   }
 
   // 处理chathub的指令，处理完毕后调用 --> _replyActionToHub --> _sendEventToHub
@@ -106,19 +116,17 @@ class GRPCClient extends EventEmitter {
     const body = event.getBody()
     const clientId = event.getClientid()
     const clientType = event.getClienttype()
+    const botClientId = event.getBotclientid()
+    const botClientType = event.getBotclienttype()
+    const botId = event.getBotid()
 
-    if (eventType === 'PING') {
-      this.pingTimes++
-      // console.log(eventType, clientId, clientType, body)
+    if (eventType !== 'PING' && eventType !== 'PONG') {
+      // console.log(event)
     }
 
-    if (this.pingTimes % 20 === 1) {
-      // console.log('FROM CHATHUB:', {
-      //   eventType,
-      //   body,
-      //   clientId,
-      //   clientType
-      // })
+    if (!(this.botAdapters && this.botAdapters[clientId] && this.botAdapters[clientId]['adapter'])) {
+      log.error('_handleEventFromHub', `invalidClientId`, `clientId: ${clientId} clientType: ${clientType} eventType: ${eventType}`)
+      return
     }
 
 
@@ -153,18 +161,23 @@ class GRPCClient extends EventEmitter {
     }
 
     if (eventType === 'LOGIN') {
-      await this._handleLoginRequest(body)
+      await this._handleLoginRequest(clientId, body)
     } else if (eventType === 'LOGOUT') {
-      if (!this.botAdapter.isSignedIn()) {
+      if (!this.botAdapters[clientId]['adapter'].isSignedIn()) {
         await this._replyActionToHub(eventType, body, null, 'Can not logout, because the bot is not signed on')
         log.error('Can not logout, because the bot is not signed on')
         return
       }
-      await this.botAdapter.logout()
+      await this.botAdapters[clientId]['adapter'].logout()
     } else if (eventType === 'SHUTDOWN') {
-      process.exit(0)
+      // process.exit(0)
+    } else if (eventType === 'BOTMIGRATE') {
+      // TODO: how to do with BOTMIGRATE?
+      log.debug('BOTMIGRATE TO:', botId)
     } else {
-      if (!this.botAdapter.isSignedIn()) {
+      // 剩下的类型都是BOTACTION(maybe)
+
+      if (!this.botAdapters[clientId]['adapter'].isSignedIn()) {
         await this._replyActionToHub(eventType, body, null, 'Bot is not signed on, can not execute any action.')
         log.error(`[${eventType}] Bot is not signed on, can not execute any action: ${body}`)
         return
@@ -188,8 +201,8 @@ class GRPCClient extends EventEmitter {
           if (actionType === 'SnsTimeline') {
             return
           }
-
-          response = await this.botAdapter.handleHubAction(actionType, actionBody)
+          // 
+          response = await this.botAdapters[clientId]['adapter'].handleHubAction(actionType, actionBody)
         }
 
         const cost = (new Date()) - startTime
@@ -206,33 +219,32 @@ class GRPCClient extends EventEmitter {
 
           if (actionType === 'GetContact') {
             // 我不确定这里chathub要不要GetContact指令，先加着
-            await this._replyActionToHub(actionType, parsedBody, response)
-            await this._replyActionToHub('CONTACTINFO', parsedBody, response)
+            await this._replyActionToHub(clientId, clientType, actionType, parsedBody, response)
+            await this._replyActionToHub(clientId, clientType, 'CONTACTINFO', parsedBody, response)
           } else {
-            await this._replyActionToHub(actionType, parsedBody, response)
+            await this._replyActionToHub(clientId, clientType, actionType, parsedBody, response)
           }
         } else {
           log.error(`From Chathub:: ${actionType} ${body} [${cost}ms], fail: unhandled message`)
 
-          await this._replyActionToHub(actionType, parsedBody, 'unhandled message')
+          await this._replyActionToHub(clientId, clientType, actionType, parsedBody, 'unhandled message')
         }
       } catch (e) {
         const cost = (new Date()) - startTime
         log.error(`From Chathub: ${actionType} ${body} [${cost}ms], fail: ${e.toString()}`)
-        console.log(e)
-        await this._replyActionToHub(actionType, parsedBody, null, e.toString())
+        await this._replyActionToHub(clientId, clientType, actionType, parsedBody, null, e.toString())
       }
     }
   }
 
-  _sendEventToHub (eventType, eventBody) {
+  _sendEventToHub (clientId, clientType, eventType, eventBody) {
     if (this.tunnel === undefined) {
       log.error('grpc connection not established while receiving wxlogin callback, exit.')
       return
     }
 
     if (_.isEmpty(eventType)) {
-      log.error('wxcallback data.eventType undefined')
+      log.error('wxcallback data.eventType undefined', clientId, clientType, eventType, eventBody)
       return
     }
 
@@ -261,9 +273,11 @@ class GRPCClient extends EventEmitter {
       log.debug(`\n`)
     }
 
-    const newEventRequest = (eventType, body) => {
+    const newEventRequest = (clientId, clientType, eventType, body) => {
       const req = new messages.EventRequest()
       req.setEventtype(eventType)
+      req.setClientid(clientId)
+      req.setClienttype(clientType)
 
       if (body) {
         if (typeof body === 'string') {
@@ -273,16 +287,13 @@ class GRPCClient extends EventEmitter {
         }
       }
 
-      req.setClientid(this.botAdapter.clientId)
-      req.setClienttype(this.botAdapter.clientType)
-
       return req
     }
 
-    this.tunnel.write(newEventRequest(eventType, eventBody))
+    this.tunnel.write(newEventRequest(clientId, clientType, eventType, eventBody))
   }
 
-  _replyActionToHub (eventType, originalEventBody, data, error) {
+  _replyActionToHub (clientId, clientType, eventType, originalEventBody, data, error) {
     const result = {}
     if (error) {
       result.success = false
@@ -293,6 +304,8 @@ class GRPCClient extends EventEmitter {
     }
 
     return this._sendEventToHub(
+      clientId,
+      clientType,
       'ACTIONREPLY',
       {
         eventType: eventType,
@@ -307,7 +320,10 @@ class GRPCClient extends EventEmitter {
     }
 
     this.heartBeatTimer = setInterval(async () => {
-      this._sendEventToHub('PING', '')
+      for (const botAdapter of Object.values(this.botAdapters)) {
+        this._sendEventToHub(botAdapter['adapter'].clientId, botAdapter['adapter'].clientType, 'PING', '')
+      }
+      
     }, this.heartBeatInterval)
   }
 
@@ -346,9 +362,12 @@ class GRPCClient extends EventEmitter {
     })
 
     // Register client with hub instantly.
-    await this._sendEventToHub('REGISTER', 'HELLO')
+    // await this._sendEventToHub('REGISTER', 'HELLO')
+    for (const botAdapter of Object.values(this.botAdapters)) {
+      this._sendEventToHub(botAdapter['adapter'].clientId, botAdapter['adapter'].clientType, 'REGISTER', 'HELLO')
+    }
 
-    await this.botAdapter.tryToSendLoginInfoToHub()
+    // await this.botAdapters.tryToSendLoginInfoToHub()
 
     this._startHubHeartBeat()
   }

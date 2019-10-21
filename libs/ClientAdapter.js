@@ -1,6 +1,10 @@
 
 /**
- * 其他客户端的基础类，一个客户端需要实现登入登出以及实施chathub各种指令的操作
+ * 
+ * !!!!!!! NEVER MODIFY THIS FILE IN THIS PROJECT !!!!!!!!!!!
+ * !!!!!!! ANY BUG OR MODIFICATION PLEASE SUBMIT PULL REQUEST TO 
+ * !!!!!!! https://github.com/iyjian/chathubmockserver
+ * 
  */
 class ClientAdapter {
   constructor (clientId, clientType) {
