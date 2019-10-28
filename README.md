@@ -3,7 +3,7 @@
 init the docker-compose file, then modify the 
 CHATHUB_GRPC_HOST
 CHATHUB_GRPC_PORT
-envvironment according to your [chathub](https://github.com/hawkwithwind/chat-bot-hub) configuration file.
+environments according to your [chathub](https://github.com/hawkwithwind/chat-bot-hub) configuration file.
 
 ```bash
 
