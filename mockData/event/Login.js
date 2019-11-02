@@ -1,3 +1,6 @@
+const conf = require('./../../conf')
+
 module.exports = {
-  id: 'mockWechatAccount2'
+  id: conf.botUserName,
+  nickName: 'igot油'
 }

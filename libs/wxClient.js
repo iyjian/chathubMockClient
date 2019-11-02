@@ -43,20 +43,22 @@ class mockBot extends EventEmitter {
   // 
   async mockEventEmmiter () {
     // login event
-    await this.sleep(5)
+    await this.sleep(1)
     this.emit('login', event.Login)
     await this.sleep(5)
-    this.emit('roomJoin', event.RoomJoin)
-    await this.sleep(5)
-    this.emit('message', event.TextMessage)
-    await this.sleep(5)
-    this.emit('message', event.UrlMessage)
-    await this.sleep(5)
-    this.emit('message', event.MiniProgramMessage)
-    await this.sleep(5)
-    this.emit('message', event.ImageMessage)
-    await this.sleep(5)
-    this.emit('friendship', event.FriendRequest)
+    event.ContactInfos.map(contactInfo => this.emit('contactInfo', contactInfo))
+    // await this.sleep(5)
+    // this.emit('roomJoin', event.RoomJoin)
+    // await this.sleep(5)
+    // this.emit('message', event.TextMessage)
+    // await this.sleep(5)
+    // this.emit('message', event.UrlMessage)
+    // await this.sleep(5)
+    // this.emit('message', event.MiniProgramMessage)
+    // await this.sleep(5)
+    // this.emit('message', event.ImageMessage)
+    // await this.sleep(5)
+    // this.emit('friendship', event.FriendRequest)
   }
 
   // 是否登陆

@@ -1,5 +1,5 @@
 const ClientAdapter = require('./ClientAdapter')
-// const config = require('../conf')
+const conf = require('./../conf')
 const uuidv4 = require('uuid/v4')
 const fs = require('fs')
 const path = require('path')
@@ -13,7 +13,9 @@ class MockClientAdapter extends ClientAdapter {
 
     this.mockBot = null
 
-    this.contactSelf = {}
+    this.contactSelf = {
+      id: conf.botUserName
+    }
 
     this._registerHubActions()
   }
@@ -153,7 +155,8 @@ class MockClientAdapter extends ClientAdapter {
     const userId = this.contactSelf.id
 
     this.sendHubEvent(ClientAdapter.HubEvent.LOGIN_DONE, {
-      userName: userId
+      userName: userId,
+      nickname: 'good'
     })
   }
 
