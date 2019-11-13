@@ -17,19 +17,19 @@ module.exports = () => {
         
       },
       "_eventsCount": 0,
-      "id": "wxid_5753727547512",
+      "id": "zhanyue",
       "payload": {
         "alias": "",
         "avatar": "http://wx.qlogo.cn/mmhead/ver_1/hicapktFFOmGzyqT0xFGeTL7iaqMurZQCO0r1njMwOB73wq9MVC8eWiaOpsLOX7Akw78Uhz90VQlquoEA0Iia3bjIn3GZNoA9y2YlmM7GXTXbTA/132",
         "city": "Xiangtan",
         "friend": true,
         "gender": 2,
-        "id": "wxid_5753727547512",
-        "name": "小怪兽",
+        "id": "zhanyue",
+        "name": "斩月",
         "province": "Hunan",
         "signature": "",
         "type": 1,
-        "weixin": "wxid_5753727547512"
+        "weixin": "zhanyue"
       }
     }
   }
