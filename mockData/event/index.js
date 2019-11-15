@@ -5,6 +5,6 @@ module.exports = {
   RoomJoin: require('./RoomJoin'),
   TextMessage: require('./TextMessage'),
   UrlMessage: require('./UrlMessage'),
-  ContactInfos: require('./ContactInfos'),
+  ContactInfo: require('./ContactInfo'),
   Login: require('./Login')
 }

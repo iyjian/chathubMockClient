@@ -46,7 +46,13 @@ class mockBot extends EventEmitter {
     await this.sleep(1)
     this.emit('login', event.Login)
     await this.sleep(5)
-    event.ContactInfos.map(contactInfo => this.emit('contactInfo', contactInfo))
+    // send bot's info
+    this.emit('contactInfo', event.ContactInfo)
+    // send random contacts
+    setInterval(() => {
+      event.ContactInfo.username = (Math.round(Math.random() * 10000000)).toString()
+      this.emit('contactInfo', event.ContactInfo)
+    }, 500)
     // await this.sleep(5)
     // this.emit('roomJoin', event.RoomJoin)
     // await this.sleep(5)
