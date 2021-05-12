@@ -11,7 +11,7 @@
   "dependencies": {
     "file-box": "^0.8.27",
     "google-protobuf": "^3.10.0",
-    "grpc": "^1.24.0",
+    "grpc": "^1.24.9",
     "lodash": "^4.17.15",
     "log4js": "^5.2.2",
     "uuid": "^3.3.3"
